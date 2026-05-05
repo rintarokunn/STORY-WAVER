@@ -41,3 +41,7 @@ def init_db():
 
 # 3. アプリ起動時に初期化を実行
 init_db()
+
+# 4. StreamlitアプリのUI構築
+st.title("StoryWaver - AIと一緒に物語を創る")
+st.write("StoryWaverは、AIと対話しながら物語を創作するためのツールです。")
