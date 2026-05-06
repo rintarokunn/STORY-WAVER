@@ -1,7 +1,7 @@
 import streamlit as st
 import sqlite3
 from datetime import datetime
-import openai
+from openai import OpenAI
 
 # ==========================================
 # 1. データベースの設定と初期化
