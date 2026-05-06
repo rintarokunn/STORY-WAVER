@@ -124,62 +124,6 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 
-
-# これまでの会話履歴を表示
-
-for message in st.session_state.messages:
-
-    with st.chat_message(message["role"]):
-
-        st.markdown(message["content"])
-
-
-
-# ユーザー入力
-
-if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
-
-    # ユーザーのメッセージを追加
-
-    st.session_state.messages.append({"role": "user", "content": prompt})
-
-    with st.chat_message("user"):
-
-        st.markdown(prompt)
-
-
-
-    # AIの返事（★ここを本物のAIに差し替え！）
-
-    with st.chat_message("assistant"):
-
-        with st.spinner("アニちゃんが考え中..."):
-
-            try:
-
-                # 本物のOpenAIを呼び出す命令
-
-                response = client.chat.completions.create(
-
-                    model="gpt-3.5-turbo",
-
-                    messages=[{"role": "user", "content": prompt}],
-
-                    temperature=0.8,
-
-                )
-
-                response = response.choices[0].message.content
-
-            except Exception as e:
-
-
-
-                response = f"エラーだよ！: {str(e)}"
-
-
-            st.markdown(response)
-
 # ==================== 会話ログ保存機能 ====================
 # 会話保存関数
 def save_message(project_id, role, content):
