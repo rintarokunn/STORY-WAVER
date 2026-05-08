@@ -79,8 +79,6 @@ if "chat_count" not in st.session_state:
     st.session_state.chat_count = 0
 
 # 管理者チェック用の入力（サイドバー）
-admin_key = st.sidebar.text_input("管理者コード", type="password")
-is_admin = (admin_key == st.secrets.get("ADMIN_PASSWORD", "test"))
 
 # --- 2. ここからメインのチャット処理 ---
 if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
