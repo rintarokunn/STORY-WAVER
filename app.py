@@ -91,12 +91,15 @@ def get_today_usage():
     c = conn.cursor()
     c.execute('SELECT count FROM usage_stats WHERE date = ?', (today,))
     row = c.fetchone()
-    conn.close()
+    conn.close()     
     return row[0] if row else 0
 
 # --- 2. メインのチャット処理 ---
 if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
     
+    current_admin_key = st.session_state.get("admin_key_input", "")
+    is_admin = (current_admin_key == st.secrets.get("ADMIN_PASSWORD", "test"))
+
     today_count = get_today_usage()
 
     if not is_admin and today_count >= 3:
