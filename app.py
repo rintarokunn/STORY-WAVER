@@ -76,9 +76,7 @@ for msg in st.session_state.messages:
 # ==========================================
 # 3. チャット画面と自動保存の実装
 # ==========================================
-if prompt := st.chat_input("物語のアイデアや設定を教えてください…"):
-
-# --- 1. ここらへんに管理者ログインを置く（サイドバー） ---
+# 1. 管理者コードの入力（これがないと回数制限がかかるよ！）
 admin_key = st.sidebar.text_input("管理者コード", type="password")
 is_admin = (admin_key == st.secrets.get("ADMIN_PASSWORD", "test"))
 
