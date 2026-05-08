@@ -38,6 +38,15 @@ def init_db():
             FOREIGN KEY (story_id) REFERENCES stories(id)
         )
     ''')
+
+    # 3. 利用統計の棚（将来の分析用に！）
+    c.execute('''
+    CREATE TABLE IF NOT EXISTS usage_stats (
+        date TEXT PRIMARY KEY,
+        count INTEGER
+    )
+''')
+
     conn.commit()
     conn.close()
 
@@ -75,57 +84,54 @@ for msg in st.session_state.messages:
 
 # --- 3. ここが本番！チャット入力の場所 ---
 
-if "chat_count" not in st.session_state:
-    st.session_state.chat_count = 0
+# --- 1. 今日の利用回数をDBから取得する関数 ---
+def get_today_usage():
+    today = datetime.now().strftime("%Y-%m-%d")
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('SELECT count FROM usage_stats WHERE date = ?', (today,))
+    row = c.fetchone()
+    conn.close()
+    return row[0] if row else 0
 
-# 管理者チェック用の入力（サイドバー）
+# --- 2. 管理者チェック（ここはOK！） ---
+admin_key = st.sidebar.text_input("管理者コード", type="password", key="admin_key_input")
+is_admin = (admin_key == st.secrets.get("ADMIN_PASSWORD", "test"))
 
-# --- 2. ここからメインのチャット処理 ---
+# --- 3. メインのチャット処理 ---
 if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
     
-    # 【お財布ガード】管理者じゃなくて、回数制限を超えていたら止める！
-    if not is_admin and st.session_state.chat_count >= 3:
-        st.error("デモ版の回数制限（3回）に達しました。リロードして最初から試してね！")
+    # 今日の累計回数をチェック
+    today_count = get_today_usage()
+
+    # 【重要！】優先順位：管理者は「常にOK」。一般人は「累計3回まで」
+    if not is_admin and today_count >= 3:
+        st.error("本日の全体利用上限（3回）に達しました。里長（管理者）のみ利用可能です！")
     else:
-        # 1. ユーザーのメッセージを履歴に追加して表示
+        # --- ここから通常のAI処理 ---
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # 2. AIの応答処理
         with st.chat_message("assistant"):
             with st.spinner("考え中…"):
                 try:
-                    # AIに応答を求める
-                    response_data = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
-                        temperature=0.8,
-                    )
-                    response = response_data.choices[0].message.content
-                    st.markdown(response)
+                    # AI応答、表示、履歴追加（中略）...
                     
-                    # AIの返答を履歴に追加 
-                    st.session_state.messages.append({"role": "assistant", "content": response})
-
-                    # 3. データベースに自動保存
-                    conn = get_db_connection() 
-                    c = conn.cursor() 
-                    temp_title = response[:10] + "..."
-                    c.execute('''
-                        INSERT INTO stories (title, content, created_at)
-                        VALUES (?, ?, ?)
-                    ''', (temp_title, response, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-                    conn.commit() 
-                    conn.close()
-
-                    # 【重要】管理用カウントを「成功した時だけ」増やす！
+                    # --- 成功したらDBの回数を増やす！ ---
                     if not is_admin:
-                        st.session_state.chat_count += 1
-                    
-                    # 保存できたら画面を更新
-                    st.rerun()
+                        today = datetime.now().strftime("%Y-%m-%d")
+                        conn = get_db_connection()
+                        c = conn.cursor()
+                        c.execute('''
+                            INSERT INTO usage_stats (date, count) VALUES (?, 1)
+                            ON CONFLICT(date) DO UPDATE SET count = count + 1
+                        ''', (today,))
+                        conn.commit()
+                        conn.close()
 
+                    # 最後にリロードして反映
+                    st.rerun()
                 except Exception as e:
                     st.error(f"エラーだよ！: {str(e)}")
 
