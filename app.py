@@ -94,11 +94,7 @@ def get_today_usage():
     conn.close()
     return row[0] if row else 0
 
-# --- 2. 管理者チェック（ここはOK！） ---
-admin_key = st.sidebar.text_input("管理者コード", type="password", key="admin_key_input")
-is_admin = (admin_key == st.secrets.get("ADMIN_PASSWORD", "test"))
-
-# --- 3. メインのチャット処理 ---
+# --- 2. メインのチャット処理 ---
 if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
     
     # 今日の累計回数をチェック
