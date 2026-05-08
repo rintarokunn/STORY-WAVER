@@ -48,6 +48,8 @@ init_db()
 # ==========================================
 st.set_page_config(page_title="StoryWaver", page_icon="📝", layout="wide")
 st.title("StoryWaver - AIと一緒に物語を創る")
+admin_key = st.sidebar.text_input("管理者コード", type="password")
+is_admin = (admin_key == st.secrets.get("ADMIN_PASSWORD", "test"))
 st.caption("AIと対話しながら物語を創作するためのツールです。")
 st.divider()
 
@@ -75,7 +77,32 @@ for msg in st.session_state.messages:
 # 3. チャット画面と自動保存の実装
 # ==========================================
 if prompt := st.chat_input("物語のアイデアや設定を教えてください…"):
-    # ユーザーの入力を表示用リストに追加
+
+# --- 1. ここらへんに管理者ログインを置く（サイドバー） ---
+admin_key = st.sidebar.text_input("管理者コード", type="password")
+is_admin = (admin_key == st.secrets.get("ADMIN_PASSWORD", "test"))
+
+# --- 2. カウントの初期化 ---
+if "chat_count" not in st.session_state:
+    st.session_state.chat_count = 0
+
+# --- 3. ここが本番！チャット入力の場所 ---
+if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
+    
+    # 【お財布ガード】管理者じゃなくて、回数制限を超えていたら止める！
+    if not is_admin and st.session_state.chat_count >= 3:
+        st.error("デモ版の回数制限（3回）に達しました。リロードして最初から試してね！")
+    else:
+        # ここから下が、今までの「AIに送る処理」や「メッセージ表示」のコード
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # AIの応答処理が続く...
+        # 最後にカウントを増やすのを忘れずに！
+        if not is_admin:
+            st.session_state.chat_count += 1    
+
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
