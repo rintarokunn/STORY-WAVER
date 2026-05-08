@@ -7,7 +7,7 @@ from openai import OpenAI
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # ==========================================
-# データベース設定
+#1 データベース設定
 # ==========================================
 def get_db_connection():
     conn = sqlite3.connect('storywaver.db', check_same_thread=False)
@@ -26,6 +26,7 @@ def init_db():
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
     # 2. 会話の記録棚（storiesテーブルと紐付け！）
     c.execute('''
         CREATE TABLE IF NOT EXISTS conversations (
@@ -43,7 +44,7 @@ def init_db():
 init_db()
 
 # ==========================================
-# Streamlit UI
+#2 Streamlit UI
 # ==========================================
 st.set_page_config(page_title="StoryWaver", page_icon="📝", layout="wide")
 st.title("StoryWaver - AIと一緒に物語を創る")
@@ -70,31 +71,51 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# ユーザー入力
+# ==========================================
+# 3. チャット画面と自動保存の実装
+# ==========================================
 if prompt := st.chat_input("物語のアイデアや設定を教えてください…"):
-    # 一旦 ID 1 の物語に保存（後で選択機能を作れるよ！）
-    story_id = 1
-    save_message(story_id, "user", prompt)
+    # ユーザーの入力を表示用リストに追加
     st.session_state.messages.append({"role": "user", "content": prompt})
-    
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         with st.spinner("考え中…"):
             try:
+                # ★ここでAIに応答を求める（アンタが言った大事な設定を全部入れたよ！）
                 response_data = client.chat.completions.create(
                     model="gpt-3.5-turbo",
+                    # これまでの会話履歴を全部渡す [cite: 107]
                     messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
+                    # クリエイティブな回答にするための設定
                     temperature=0.8,
                 )
                 response = response_data.choices[0].message.content
                 st.markdown(response)
-                save_message(story_id, "assistant", response)
+                # AIの返答を表示用リストに追加 
                 st.session_state.messages.append({"role": "assistant", "content": response})
-            except Exception as e:
-                st.error(f"エラーが発生しました: {str(e)}")
+
+                # 【重要！】ここで物語（storiesテーブル）に自動保存する [c: 36]
+                conn = get_db_connection() [c: 36]
+                c = conn.cursor() [c: 36]
                 
+                # タイトルはAIの返答の最初の10文字を仮で使う
+                temp_title = response[:10] + "..."
+                # 新しい stories テーブルに保存 [c: 183]
+                c.execute('''
+                    INSERT INTO stories (title, content, created_at)
+                    VALUES (?, ?, ?)
+                ''', (temp_title, response, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                conn.commit() [c: 36]
+                conn.close() [c: 36]
+                
+                # 保存できたら画面を更新して「紡いだ物語」リストに反映させる [c: 7]
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"エラーだよ！: {str(e)}")
+
 # ==========================================
 # 4. 保存された物語の読み込みと表示
 # ==========================================
