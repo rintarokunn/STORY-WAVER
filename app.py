@@ -130,45 +130,37 @@ user_key = st.sidebar.text_input("管理者コード", type="password", key="adm
 # --- 3. チャット入力と処理 ---
 if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
     
-    # --- 1. 判定用のデータを用意する ---
+    # --- 1. 判定ロジック（入力された瞬間に1回だけ計算する） ---
     is_admin_now = (user_key == ADMIN_KEY)
-# 関数から「許可フラグ」と「現在の回数」を受け取る
-    allowed, current_usage = check_and_update_limit(limit=3, input_key=user_key)
 
-# --- 2. 画面への表示（ここを書き換え！） ---
-    if not is_admin_now and current_usage >= 3:
-    # 管理者じゃなくて、かつ3回以上の時だけ赤くする
-        st.error(f"利用回数の上限に達しました。今日の利用は {current_usage} 回目です。管理者コードを入力すると制限なしで利用できます。")
+# 今日の利用回数を取得（関数の中でチェックするだけ。ここではまだカウントしない）
+# 昨日の JSON チェック関数を少し改造して、"回数だけ返す" モードがあると便利だよ
+    allowed, current_count = check_and_update_limit(limit=3, input_key=user_key)
+
+# --- 2. 警告の表示（ここを1箇所に絞る！） ---
+    if not is_admin_now and current_count >= 3:
+        st.error(f"利用回数の上限に達しました。今日の利用は {current_count} 回目です。管理者コードを入力すると制限なしで利用できます。")
     elif is_admin_now:
-    # 管理者の時は、安心させるメッセージを出す
-        st.success("🛡️ 管理者モード：制限なしで利用可能です！")
+        st.success("🛡️ 管理者モードで実行中です（制限なし）")
 
-# 2. 判定ロジック：管理者なら無条件でパス。一般人ならDB/JSONをチェック。
+# --- 3. チャット入力欄 ---
+    if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
+    
+    # ここでもう一度、実行して良いか最終確認
+        if not is_admin_now and current_count >= 3:
+            st.warning("制限オーバーのため、送信できません。")
+        else:
+        # --- ここからAI処理の続き ---
+        # （ユーザーメッセージの表示、AIへのリクエスト、DB保存、st.rerun() など）
 
-    if is_admin_now:
-        allowed = True
-        status = "admin"
-    else:
-        # 管理者じゃない時だけ、利用制限をチェックしに行く
-        allowed, status = check_and_update_limit(limit=3)
-
-    if not allowed:
-        st.error(f"利用回数の上限に達しました。今日の利用は {status} 回目です。管理者コードを入力すると制限なしで利用できます。")
-    else:
-        # --- ここからAIの処理 ---
-        # 成功した時に st.rerun() しても、
-        # user_key（サイドバーの文字）が残っていれば、次はまた is_admin_now が True になるよ！
-
-        # AIの応答処理
-
-        with st.chat_message("assistant"):
+            with st.chat_message("assistant"):
             
-            if status == "admin":
-                st.caption("🛡️ 管理者モードで実行中（無制限）")
-            else:
-                st.caption(f"📊 一般ユーザー利用: 本日 {status} 回目")
+                if current_count == "admin":
+                    st.caption("🛡️ 管理者モードで実行中（無制限）")
+                else:
+                    st.caption(f"📊 一般ユーザー利用: 本日 {current_count} 回目")
 
-        with st.spinner("物語を紡いでいます..."):
+            with st.spinner("物語を紡いでいます..."):
                 try:
                     response_data = client.chat.completions.create(
                         model="gpt-3.5-turbo", # または gpt-4o-mini
