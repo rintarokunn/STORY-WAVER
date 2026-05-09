@@ -130,15 +130,18 @@ user_key = st.sidebar.text_input("管理者コード", type="password", key="adm
 # --- 3. チャット入力と処理 ---
 if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
     
+    # --- 1. 判定用のデータを用意する ---
     is_admin_now = (user_key == ADMIN_KEY)
-    allowed, status = check_and_update_limit(limit=3, input_key=user_key)
+# 関数から「許可フラグ」と「現在の回数」を受け取る
+    allowed, current_usage = check_and_update_limit(limit=3, input_key=user_key)
 
-    # --- 警告を表示する条件を変えるよ！ ---
-# 「制限オーバー」かつ「まだ管理者コードを入れていない」時だけ赤くする
-if status >= 3 and not is_admin_now:
-    st.error(f"利用回数の上限に達しました。今日の利用は {status} 回目です。管理者コードを入力すると制限なしで利用できます。")
-elif is_admin_now:
-    st.success("🛡️ 管理者モード：制限なしで利用可能です！")
+# --- 2. 画面への表示（ここを書き換え！） ---
+    if not is_admin_now and current_usage >= 3:
+    # 管理者じゃなくて、かつ3回以上の時だけ赤くする
+        st.error(f"利用回数の上限に達しました。今日の利用は {current_usage} 回目です。管理者コードを入力すると制限なしで利用できます。")
+    elif is_admin_now:
+    # 管理者の時は、安心させるメッセージを出す
+        st.success("🛡️ 管理者モード：制限なしで利用可能です！")
 
 # 2. 判定ロジック：管理者なら無条件でパス。一般人ならDB/JSONをチェック。
 
