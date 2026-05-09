@@ -126,30 +126,30 @@ def check_and_update_limit(limit=3, input_key=None):
 
 # --- 2. UI部分（サイドバーに管理者入力） ---
 user_key = st.sidebar.text_input("管理者コード", type="password", key="admin_key_input")
-
-# --- 1. 判定ロジック ---
+# --- 1. 判定用のフラグを作る（ここを一番上に！） ---
 is_admin_now = (user_key == ADMIN_KEY)
-# 回数チェック（まだカウントは増やさない）
+# 現在の回数を確認する（ここではカウントを増やさない）
 allowed, current_count = check_and_update_limit(limit=3, input_key=user_key)
 
-# --- 2. 警告の表示（ここを1箇所に！） ---
-if not is_admin_now and current_count >= 3:
+# --- 2. 警告表示（管理者なら何も出さない） ---
+if current_count >= 3 and not is_admin_now:
     st.error(f"利用回数の上限に達しました。今日の利用は {current_count} 回目です。管理者コードを入力すると制限なしで利用できます。")
 elif is_admin_now:
     st.success("🛡️ 管理者モード：制限なしで利用可能です！")
 
-# --- 3. チャット入力（ここを世界に1つだけにする！） ---
-# 名前(key)を付けて、重複エラーを絶対に防ぐよ
-if prompt := st.chat_input("物語のアイデアや設定を教えてください...", key="story_waver_input"):
+# --- 3. メインの入力処理 ---
+if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
     
-    # 最終チェック
+    # ここでもう一度、管理者の権限を確認
     if not is_admin_now and current_count >= 3:
-        st.warning("制限オーバーのため送信できません。")
+        # ここは予備のガード。基本は上の st.error で止まってるはず
+        st.stop() 
+    
     else:
-        # ユーザーのメッセージを表示
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        # --- ここからAI処理 ---
+        # （ユーザーメッセージ表示、AI応答、DB保存...）
+        # ※ AIが成功した時だけ、JSONのカウントを増やす関数を呼ぶようにしてね！
+
 
         # AIの応答
         with st.chat_message("assistant"):
