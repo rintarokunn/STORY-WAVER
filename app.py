@@ -1,29 +1,64 @@
+# StoryWaver - AIと一緒に物語を創る
+
+#ストリームリットのライブラリを使う
 import streamlit as st 
+#SQLiteを使うためのライブラリ
 import sqlite3
+#日付と時間を扱うためのライブラリ
 import datetime
+#openaiを使うためのライブラリ
 from openai import OpenAI 
+
 
 # OpenAIクライアント初期化
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# ========================================== # データベース設定 # ==========================================
+
+#ここから先は物語を格納しておくためのデータベースの作成です。
+
+#データベースとつなげるための関数を定義します。これで、データベースにアクセスするためのコードを簡単に再利用できるようになります。
 def get_db_connection(): 
+#SQLを使ってデータベースに接続します。ストーリウェーバーという名前のノートを指定。
+#プログラムが一度にこなす仕事の並びを、スレッドという。スレッドは、同時に複数の仕事をこなすことができますが、SQLiteは同時に複数のスレッドからアクセスすることができません。check_same_thread=Falseを指定することで、複数のスレッドから同じデータベース接続を使用できるようになります。    
+#Falseにすることで、同じスレッドかどうかのチェックをしない。専門職がチェックして、資格持ってないですと言うのではなく、一般の人が交代でノートに書き込めるイメージです。
     conn = sqlite3.connect('storywaver.db', check_same_thread=False) 
+#上記でつながったパイプをそとに出すためのコードです。これで、他の関数からもこのデータベースにアクセスできるようになります。
     return conn 
 
-def init_db(): 
+#データベースの関数を定義します。これで、データベースに必要なテーブルを作成することができます。CREATE TABLE IF NOT EXISTSは、テーブルがすでに存在する場合は何もしないという意味です。これで、プログラムを何度も実行してもエラーにならないようになります。
+#全体で言うとここは、棚を作る手順書です、実際に棚はinit_db() から作られていきます。
+def init_db():  
+    #先ほど定義した、データベースとつながったパイプを使います。
     conn = get_db_connection() 
+    #カーソル。先ほど定義したデータベースというパイプがあります。このパイプの中のノートに書いたり、棚からデータを出したりする作業員。Cで呼ぶことができる
     c = conn.cursor() 
-    c.execute(''' CREATE TABLE IF NOT EXISTS stories ( id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, content TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP ) ''')
+    #実際にCに命令（エグゼキュート）するところ。ノートに書いたり、棚から出したりする。
+    c.execute(''' CREATE TABLE IF NOT EXISTS stories ( 
+            id INTEGER PRIMARY KEY AUTOINCREMENT, 
+            title TEXT NOT NULL, 
+            content TEXT, 
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP 
+            ) ''')
+    #カーソルがやったことをノート（storywaver.db）に刻み込む
     conn.commit() 
+    #ノート（storywaver.db）を閉じる
     conn.close()
 
+#データベースの関数です。上記の手順書の通りに棚を作れとスイッチを押しています。
 init_db() 
-# ========================================== # Streamlit UI # ========================================== 
+
+# ========================================== # Streamlit UI （ユーザーインターフェース）画面作ってます# ========================================== 
+# ページの設定。タイトル、アイコン、レイアウトを指定しています。これで、ブラウザのタブにタイトルとアイコンが表示され、ページ全体が広く使えるようになります。
 st.set_page_config(page_title="StoryWaver", page_icon="📖", layout="wide") 
+#タイトル
 st.title("StoryWaver - AIと一緒に物語を創る") 
+#このwebアプリの説明
 st.caption("AIと対話しながら物語を創作するためのツールです。") 
+#区切り線
 st.divider()
+
+
 # 管理者設定 
 ADMIN_KEY = st.secrets.get("ADMIN_PASSWORD", "admin123")
 with st.sidebar: 
