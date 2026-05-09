@@ -59,8 +59,6 @@ init_db()
 # ==========================================
 st.set_page_config(page_title="StoryWaver", page_icon="📝", layout="wide")
 st.title("StoryWaver - AIと一緒に物語を創る")
-admin_key = st.sidebar.text_input("管理者コード", type="password")
-is_admin = (admin_key == st.secrets.get("ADMIN_PASSWORD", "test"))
 st.caption("AIと対話しながら物語を創作するためのツールです。")
 st.divider()
 
