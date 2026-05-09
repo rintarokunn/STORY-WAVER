@@ -130,25 +130,28 @@ user_key = st.sidebar.text_input("管理者コード", type="password", key="adm
 # --- 3. チャット入力と処理 ---
 if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
     
-    # 利用制限のチェックを実行
-    allowed, status = check_and_update_limit(limit=3, input_key=user_key)
+    is_admin_now = (user_key == ADMIN_KEY)
+
+    if is_admin_now:
+        allowed = True
+        status = "admin"
+    else:
+        allowed, status = check_and_update_limit(limit=3, input_key=user_key)
 
     if not allowed:
-        st.error(f"【制限エラー】本日の上限（3回）に達しました。")
+        st.error(f"利用回数の上限に達しました。今日の利用は {status} 回目です。管理者コードを入力すると制限なしで利用できます。")
+    # ここから先は、管理者 または 制限内の一般ユーザー だけが進める
     else:
-        # メッセージ表示
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
 
         # AIの応答処理
-        with st.chat_message("assistant"):
-            if status == "admin":
-                st.caption("🛡️ 管理者モードで実行中（無制限）")
-            else:
-                st.caption(f"📊 一般ユーザー利用: 本日 {status} 回目")
+with st.chat_message("assistant"):
+    if status == "admin":
+        st.caption("🛡️ 管理者モードで実行中（無制限）")
+    else:
+        st.caption(f"📊 一般ユーザー利用: 本日 {status} 回目")
 
-            with st.spinner("物語を紡いでいます..."):
+        with st.spinner("物語を紡いでいます..."):
                 try:
                     response_data = client.chat.completions.create(
                         model="gpt-3.5-turbo", # または gpt-4o-mini
