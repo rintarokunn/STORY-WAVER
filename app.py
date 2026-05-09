@@ -58,15 +58,6 @@ st.caption("AIと対話しながら物語を創作するためのツールです
 #区切り線
 st.divider()
 
-
-# 管理者設定 
-ADMIN_KEY = st.secrets.get("ADMIN_PASSWORD", "admin123")
-with st.sidebar: 
-    st.subheader("管理者設定") 
-user_key = st.text_input("管理者コード", type="password", key="admin_key") 
-is_admin = (user_key == ADMIN_KEY)
-if is_admin: st.success("管理者モード有効")
-else: st.info("一般ユーザーとして利用中") 
 # チャット履歴初期化
 if "messages" not in st.session_state: 
     st.session_state.messages = []
