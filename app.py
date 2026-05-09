@@ -84,72 +84,99 @@ for msg in st.session_state.messages:
 
 # --- 3. ここが本番！チャット入力の場所 ---
 
-# --- 1. 今日の利用回数をDBから取得する関数 ---
-def get_today_usage():
-    today = datetime.now().strftime("%Y-%m-%d")
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('SELECT count FROM usage_stats WHERE date = ?', (today,))
-    row = c.fetchone()
-    conn.close()     
-    return row[0] if row else 0
+# ==========================================
+# 3. チャット画面と利用制限の実装
+# ==========================================
 
-# --- 2. メインのチャット処理 ---
+# --- 1. 管理者設定とログ準備 ---
+ADMIN_KEY = st.secrets.get("ADMIN_PASSWORD", "my_secret_password")
+LOG_FILE = "api_usage.json"
+
+def check_and_update_limit(limit=3, input_key=None):
+    # 管理者チェック：合言葉が一致すれば制限をスルー
+    if input_key == ADMIN_KEY:
+        return True, "admin"
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    # ログファイルの読み込み
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r") as f:
+            try:
+                data = json.load(f)
+            except:
+                data = {"date": today, "count": 0}
+    else:
+        data = {"date": today, "count": 0}
+
+    # 日付が変わっていたらリセット
+    if data.get("date") != today:
+        data = {"date": today, "count": 0}
+
+    # 上限チェック
+    if data["count"] >= limit:
+        return False, data["count"]
+
+    # カウントアップと保存
+    data["count"] += 1
+    with open(LOG_FILE, "w") as f:
+        json.dump(data, f)
+    
+    return True, data["count"]
+
+# --- 2. UI部分（サイドバーに管理者入力） ---
+user_key = st.sidebar.text_input("管理者コード", type="password", key="admin_key_input")
+
+# --- 3. チャット入力と処理 ---
 if prompt := st.chat_input("物語のアイデアや設定を教えてください..."):
     
-    current_admin_key = st.session_state.get("admin_key_input", "")
-    is_admin = (current_admin_key == st.secrets.get("ADMIN_PASSWORD", "test"))
+    # 利用制限のチェックを実行
+    allowed, status = check_and_update_limit(limit=3, input_key=user_key)
 
-    today_count = get_today_usage()
-
-    if not is_admin and today_count >= 3:
-        st.error("本日の全体利用上限（3回）に達しました。里長（管理者）のみ利用可能です！")
+    if not allowed:
+        st.error(f"【制限エラー】本日の上限（3回）に達しました。")
     else:
-        # ユーザーの入力を表示用リストに追加
+        # メッセージ表示
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
+        # AIの応答処理
         with st.chat_message("assistant"):
-            with st.spinner("考え中…"):
+            if status == "admin":
+                st.caption("🛡️ 管理者モードで実行中（無制限）")
+            else:
+                st.caption(f"📊 一般ユーザー利用: 本日 {status} 回目")
+
+            with st.spinner("物語を紡いでいます..."):
                 try:
-                    # 【ここが抜けてた心臓部！】AIに応答を求める
                     response_data = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
+                        model="gpt-3.5-turbo", # または gpt-4o-mini
                         messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
                         temperature=0.8,
                     )
                     response = response_data.choices[0].message.content
                     st.markdown(response)
                     
-                    # AIの返答を履歴に追加 
+                    # 履歴追加
                     st.session_state.messages.append({"role": "assistant", "content": response})
 
-                    # --- 成功したらDBに物語を保存！ ---
+                    # DBへの保存（既存の処理）
                     conn = get_db_connection()
                     c = conn.cursor()
-                    temp_title = response[:10] + "..." # 最初の10文字をタイトルに
+                    temp_title = response[:10] + "..."
                     c.execute('''
                         INSERT INTO stories (title, content, created_at)
                         VALUES (?, ?, ?)
                     ''', (temp_title, response, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-                    
-                    # --- さらに利用回数を増やす！ ---
-                    if not is_admin:
-                        today = datetime.now().strftime("%Y-%m-%d")
-                        c.execute('''
-                            INSERT INTO usage_stats (date, count) VALUES (?, 1)
-                            ON CONFLICT(date) DO UPDATE SET count = count + 1
-                        ''', (today,))
-                    
                     conn.commit()
                     conn.close()
-
-                    # 最後にリロードして「紡いだ物語」に反映！
+                    
+                    # 画面更新
                     st.rerun()
 
                 except Exception as e:
-                    st.error(f"エラーだよ！: {str(e)}")
+                    st.error(f"エラーが発生しました: {str(e)}")
 # ==========================================
 # 4. 保存された物語の読み込みと表示
 # ==========================================
