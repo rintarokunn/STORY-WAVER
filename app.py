@@ -10,6 +10,96 @@ import datetime
 from openai import OpenAI 
 from datetime import datetime
 
+#ーーーーーーAPIキーの利用料ーーーーーーーーーーーーーーーーーー
+
+from datetime import datetime
+from openai import OpenAI
+
+LOG_FILE = "usage_cost.txt"
+
+# gpt-4o-miniの現在の料金（2026年時点の最新価格をご確認ください）
+# ※ここでは例として、入力$0.15/1M, 出力$0.60/1Mトークンで計算
+PRICE_PER_TOKEN_INPUT = 0.150 / 1_000_000
+PRICE_PER_TOKEN_OUTPUT = 0.600 / 1_000_000
+
+def is_allowed_before_api(user_id, total_cost_limit=0.5):
+    """APIを叩く前に、すでに上限金額を超えていないかチェックする"""
+# 自分（管理者）は無条件でパス
+    if user_id == "my_name":
+        print("--- 管理者モード：無制限 ---")
+        return True
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    current_cost = get_db_cost()
+# 既に上限に達している場合は、APIを叩かずに即ブロック
+    if current_cost >= total_cost_limit:
+        print(f"【エラー】本日の一般利用の上限金額（${total_cost_limit}）に達したため、APIを呼び出せません。")
+        return False
+    return True
+
+def save_new_cost(user_id, usage):
+    """API実行後に、消費したトークン分の金額を記録する"""
+    if user_id == "my_name":
+        return
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    current_cost = get_db_cost()
+
+# 今回の正確な利用料金を計算
+    call_cost = (usage.prompt_tokens * PRICE_PER_TOKEN_INPUT) + \
+                (usage.completion_tokens * PRICE_PER_TOKEN_OUTPUT)
+    new_cost = current_cost + call_cost
+
+# データベースに最新の合計金額を書き込み
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("INSERT OR REPLACE INTO api_usage (date, total_cost) VALUES (?, ?)", (today, new_cost))
+    conn.commit()
+    conn.close()
+
+    print(f"一般利用：本日の累計金額は ${new_cost:.4f} です。")
+
+# --- API実行部分 ---
+client = OpenAI()
+
+def ask_ai(user_id, prompt):
+# 【ステップ1】APIを叩く前に金額チェック（超えていたらここで処理終了）
+    if not is_allowed_before_api(user_id, total_cost_limit=0.5):
+        return
+
+# 【ステップ2】制限内、または自分であればAPIを呼び出す
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
+)
+
+# 【ステップ3】使った分の金額をファイルに加算
+    save_new_cost(user_id, response.usage)
+
+    print("AIの回答:", response.choices.message.content)
+
+def get_db_cost():
+    today = datetime.now().strftime("%Y-%m-%d")
+    conn = get_db_connection()
+    c = conn.cursor()
+    
+    # 【ここを考えて！】
+    # api_usageテーブルから、dateがtodayと一致するtotal_costを1つ取ってくる命令
+    c.execute("SELECT total_cost FROM api_usage WHERE date = ?", (today,))
+    
+    result = c.fetchone()
+    conn.close()
+    
+    # resultに中身があればその値(result[0])を、なければ0.0を返したい
+    return result[0] if result else 0.0
+
+
+
+
+
+
+
+
 
 # OpenAIクライアント初期化
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -29,11 +119,11 @@ def get_db_connection():
 #データベースの関数を定義します。これで、データベースに必要なテーブルを作成することができます。CREATE TABLE IF NOT EXISTSは、テーブルがすでに存在する場合は何もしないという意味です。これで、プログラムを何度も実行してもエラーにならないようになります。
 #全体で言うとここは、棚を作る手順書です、実際に棚はinit_db() から作られていきます。
 def init_db():  
-    #先ほど定義した、データベースとつながったパイプを使います。
+#先ほど定義した、データベースとつながったパイプを使います。
     conn = get_db_connection() 
-    #カーソル。先ほど定義したデータベースというパイプがあります。このパイプの中のノートに書いたり、棚からデータを出したりする作業員。Cで呼ぶことができる
+#カーソル。先ほど定義したデータベースというパイプがあります。このパイプの中のノートに書いたり、棚からデータを出したりする作業員。Cで呼ぶことができる
     c = conn.cursor() 
-    #実際にCに命令（エグゼキュート）するところ。ノートに書いたり、棚から出したりする。
+#実際にCに命令（エグゼキュート）するところ。ノートに書いたり、棚から出したりする。
     c.execute(''' CREATE TABLE IF NOT EXISTS stories ( 
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
             title TEXT NOT NULL, 
@@ -41,6 +131,14 @@ def init_db():
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP 
             ) ''')
+# 【追加】料金管理用の棚（日付ごとにいくら使ったか記録する）
+    c.execute(''' 
+            CREATE TABLE IF NOT EXISTS api_usage (
+            date TEXT PRIMARY KEY, 
+            total_cost REAL DEFAULT 0.0
+        ) 
+    ''')
+
     #カーソルがやったことをノート（storywaver.db）に刻み込む
     conn.commit() 
     #ノート（storywaver.db）を閉じる
