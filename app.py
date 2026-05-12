@@ -84,7 +84,12 @@ with st.chat_message("assistant"):
 #AIが物語を紡いでいる間、スピナーを表示する。ユーザーに待ってもらうためのアニメーション
     with st.spinner("物語を紡いでいます..."): 
 #try exceptは、エラーが発生した時の処理を定義してってこと。tryはこの作業をとりあえずやってみて、exceptは止まらずにこっちの予備プランを実行してねって意味。
-        try: 
+        try:
+# プログラムの最初の方（def main(): の中など）に書く
+# 「もしmessagesという場所がまだ無かったら...」
+            if 'messages' not in st.session_state:
+# 「空っぽの部屋（リスト）を作って！」
+                st.session_state.messages = []
 #client.chat.completionsを使い、AIに物語を作ってもらう！
 # AIを呼ぶ直前にこれを書いて、中身があるかチェックする
             if len(st.session_state.messages) > 0:
