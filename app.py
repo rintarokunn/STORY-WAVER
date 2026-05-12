@@ -8,7 +8,7 @@ import sqlite3
 import datetime
 #openaiを使うためのライブラリ
 from openai import OpenAI 
-
+from datetime import datetime
 
 # OpenAIクライアント初期化
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
