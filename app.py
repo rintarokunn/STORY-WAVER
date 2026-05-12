@@ -93,12 +93,35 @@ def get_db_cost():
     # resultに中身があればその値(result[0])を、なければ0.0を返したい
     return result[0] if result else 0.0
 
+#------------------------------------------ # OpenAI UI # -----------------------------------------
 
+with st.sidebar:
+    st.subheader("🔑 認証")
+    input_key = st.text_input("合言葉を入力してください", type="password")
+    st.header("💰 コスト管理")
+    current_cost = get_db_cost() # さっき作った金庫から取る関数！
+    limit = 0.5
+    
+    # メトリック（数字）で表示
+    st.metric("本日の利用額", f"${current_cost:.4f}", delta=f"上限まで残り ${limit - current_cost:.4f}")
+    
+    # プログレスバーで視覚的に表示
+    percent = min(current_cost / limit, 1.0)
+    st.progress(percent)
+    
+    if current_cost >= limit:
+        st.error("⚠️ 本日の上限に達しました")
 
+# 合言葉が合っているかチェック
+is_admin = (input_key == st.secrets["ADMIN_PASSWORD"])
 
-
-
-
+# 合言葉が合っていれば管理者モード、そうでなければ一般ユーザーモード
+if is_admin:
+    st.sidebar.success("管理者モードでログイン中")
+    user_id = "my_name"  # これでAPI制限をパス！
+else:
+    st.sidebar.info("一般ユーザーモード")
+    user_id = "guest"    # こっちは制限がかかる！
 
 
 # OpenAIクライアント初期化
