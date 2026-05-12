@@ -91,6 +91,7 @@ with st.chat_message("assistant"):
 # プログラムの最初の方（def main(): の中など）に書く
 #client.chat.completionsを使い、AIに物語を作ってもらう！
 # AIを呼ぶ直前にこれを書いて、中身があるかチェックする
+            st.write(f"中身の正体はこれだ！: {st.session_state.messages}")
             if len(st.session_state.messages) > 0:
 # ここに response_data = client.chat.completions.create(...) を入れる
                 response_data = client.chat.completions.create( 
