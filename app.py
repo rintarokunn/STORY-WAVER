@@ -10,10 +10,6 @@ import datetime
 from openai import OpenAI 
 from datetime import datetime
 
-#ーーーーーーAPIキーの利用料ーーーーーーーーーーーーーーーーーー
-
-from datetime import datetime
-from openai import OpenAI
 
 #データベースとつなげるための関数をていぎします。これで、データベースにアクセスするためのコードを簡単に再利用できるようになります。
 def get_db_connection(): 
