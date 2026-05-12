@@ -92,20 +92,20 @@ with st.chat_message("assistant"):
                 st.session_state.messages = []
 #client.chat.completionsを使い、AIに物語を作ってもらう！
 # AIを呼ぶ直前にこれを書いて、中身があるかチェックする
-            if len(st.session_state.messages) > 0:
+                if len(st.session_state.messages) > 0:
 # ここに response_data = client.chat.completions.create(...) を入れる
-                response_data = client.chat.completions.create( 
-                model="gpt-3.5-turbo", 
-                messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages], 
+                    response_data = client.chat.completions.create( 
+                    model="gpt-3.5-turbo", 
+                    messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages], 
 #AIが創造性があるかつ、真面目な側面も持つようになる
-                temperature=0.8, 
-                ) 
+                    temperature=0.8, 
+                    ) 
 #AIが一番自信がある（確率が高い）と判断した、１番目の回答を取得する。
-                response = response_data.choices[0].message.content 
+                    response = response_data.choices[0].message.content 
 #吹き出しを作る            
-                st.markdown(response) 
+                    st.markdown(response) 
 #AIがセッションステートメントから回答を取り出し、AIの吹き出しを作る
-                st.session_state.messages.append({"role": "assistant", "content": response}) 
+                    st.session_state.messages.append({"role": "assistant", "content": response}) 
             
 #---------物語を一生消えないノート（データベース）に保存---------------------------------
 
