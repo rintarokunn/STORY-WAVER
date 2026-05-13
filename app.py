@@ -25,6 +25,37 @@ def get_db_connection():
 PRICE_PER_TOKEN_INPUT = 0.150 / 1_000_000
 PRICE_PER_TOKEN_OUTPUT = 0.600 / 1_000_000
 
+#データベースの関数を定義します。これで、データベースに必要なテーブルを作成することができます。CREATE TABLE IF NOT EXISTSは、テーブルがすでに存在する場合は何もしないという意味です。これで、プログラムを何度も実行してもエラーにならないようになります。
+#全体で言うとここは、棚を作る手順書です、実際に棚はinit_db() から作られていきます。
+def init_db():  
+#先ほど定義した、データベースとつながったパイプを使います。
+    conn = get_db_connection() 
+#カーソル。先ほど定義したデータベースというパイプがあります。このパイプの中のノートに書いたり、棚からデータを出したりする作業員。Cで呼ぶことができる
+    c = conn.cursor() 
+#実際にCに命令（エグゼキュート）するところ。ノートに書いたり、棚から出したりする。
+    c.execute(''' CREATE TABLE IF NOT EXISTS stories ( 
+            id INTEGER PRIMARY KEY AUTOINCREMENT, 
+            title TEXT NOT NULL, 
+            content TEXT, 
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP 
+            ) ''')
+# 【追加】料金管理用の棚（日付ごとにいくら使ったか記録する）
+    c.execute(''' 
+            CREATE TABLE IF NOT EXISTS api_usage (
+            date TEXT PRIMARY KEY, 
+            total_cost REAL DEFAULT 0.0
+        ) 
+    ''')
+
+    #カーソルがやったことをノート（storywaver.db）に刻み込む
+    conn.commit() 
+    #ノート（storywaver.db）を閉じる
+    conn.close()
+
+#データベースの関数です。上記の手順書の通りに棚を作れとスイッチを押しています。
+init_db() 
+
 def is_allowed_before_api(user_id, total_cost_limit=0.5):
     """APIを叩く前に、すでに上限金額を超えていないかチェックする"""
 # 自分（管理者）は無条件でパス
@@ -132,37 +163,6 @@ client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 
 #ここから先は物語を格納しておくためのデータベースの作成です。
-
-#データベースの関数を定義します。これで、データベースに必要なテーブルを作成することができます。CREATE TABLE IF NOT EXISTSは、テーブルがすでに存在する場合は何もしないという意味です。これで、プログラムを何度も実行してもエラーにならないようになります。
-#全体で言うとここは、棚を作る手順書です、実際に棚はinit_db() から作られていきます。
-def init_db():  
-#先ほど定義した、データベースとつながったパイプを使います。
-    conn = get_db_connection() 
-#カーソル。先ほど定義したデータベースというパイプがあります。このパイプの中のノートに書いたり、棚からデータを出したりする作業員。Cで呼ぶことができる
-    c = conn.cursor() 
-#実際にCに命令（エグゼキュート）するところ。ノートに書いたり、棚から出したりする。
-    c.execute(''' CREATE TABLE IF NOT EXISTS stories ( 
-            id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            title TEXT NOT NULL, 
-            content TEXT, 
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            updated_at TEXT DEFAULT CURRENT_TIMESTAMP 
-            ) ''')
-# 【追加】料金管理用の棚（日付ごとにいくら使ったか記録する）
-    c.execute(''' 
-            CREATE TABLE IF NOT EXISTS api_usage (
-            date TEXT PRIMARY KEY, 
-            total_cost REAL DEFAULT 0.0
-        ) 
-    ''')
-
-    #カーソルがやったことをノート（storywaver.db）に刻み込む
-    conn.commit() 
-    #ノート（storywaver.db）を閉じる
-    conn.close()
-
-#データベースの関数です。上記の手順書の通りに棚を作れとスイッチを押しています。
-init_db() 
 
 # ========================================== # Streamlit UI （ユーザーインターフェース）画面作ってます# ========================================== 
 # ページの設定。タイトル、アイコン、レイアウトを指定しています。これで、ブラウザのタブにタイトルとアイコンが表示され、ページ全体が広く使えるようになります。
