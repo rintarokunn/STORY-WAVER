@@ -179,8 +179,6 @@ st.divider()
 if "messages" not in st.session_state: 
 #メッセージをいれておくリストを作る。
     st.session_state.messages = []
-# ↓これが画面に出れば、初期化は通ってる！
-    st.write("デバッグ：今、空のリストを作ったよ！")
 
 # 過去のチャット表示
 #僕らが入れていくメッセージをst.session_state.messagesリストに格納していく。
