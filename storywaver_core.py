@@ -8,7 +8,7 @@ from character_model import CharacterModel
 
 class StoryWaverCore:
     def __init__(self):
-        self.character_manager = CharacterModel()
+        self.character_model = CharacterModel()
 
     def create_character(
         self,
