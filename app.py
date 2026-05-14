@@ -109,3 +109,5 @@ if submitted:
     result = core.create_character(char_data)
     if result=="成功":
         st.success(f"キャラ「{name}」を作成しました")
+    else:
+        st.error("キャラの作成に失敗しました")
