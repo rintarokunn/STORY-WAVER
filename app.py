@@ -94,15 +94,18 @@ with st.form("create_character_form"):
 
 # ボタンが押されたら Core に渡す
 if submitted:
-    result = core.create_character(
-        name=name,
-        personality=personality,
-        appearance=appearance,
-        voice=voice,
-        speaking_style=speaking_style,
-        background=background,
-        relation=relation,
-        memo=memo
-    )
+    # 入力されたデータを「一通の封筒（辞書）」にまとめる
+    char_data = {
+        "name": name,
+        "personality": personality,
+        "appearance": appearance,
+        "voice": voice,
+        "speaking_style": speaking_style,
+        "background": background,
+        "relation": relation,
+        "memo": memo
+    }
+    # Coreには「この封筒、お願い！」と渡すだけ
+    result = core.create_character(char_data)
     if result=="成功":
         st.success(f"キャラ「{name}」を作成しました")

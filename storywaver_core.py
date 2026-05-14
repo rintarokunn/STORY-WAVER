@@ -10,31 +10,22 @@ class StoryWaverCore:
     def __init__(self):
         self.character_manager = CharacterManager()
 
-    def create_character(
-        self,
-        name,
-        personality="",
-        appearance="",
-        voice="",
-        speaking_style="",
-        background="",
-        relation="",
-        memo=""
-    ):
-        model = CharacterManager(
-            name=name,
-            personality=personality,
-            appearance=appearance,
-            voice=voice,
-            speaking_style=speaking_style,
-            background=background,
-            relation=relation,
-            memo=memo
-        )
+# storywaver_core.py 内
 
-        self.character_manager.create(model)
-        return model
-# 料金設定
+def create_character(self, char_data):
+    """
+    app.py から char_data という辞書を受け取って処理する
+    """
+    try:
+        # すでに app.py で辞書にまとめているから、
+        # そのままマネージャーの create メソッドに投げちゃえばOK！
+        self.character_manager.create(char_data)
+        
+        return "成功"
+    except Exception as e:
+        return f"エラー: {str(e)}"
+#
+#  料金設定
 PRICE_PER_TOKEN_INPUT = 0.150 / 1_000_000
 PRICE_PER_TOKEN_OUTPUT = 0.600 / 1_000_000
 
