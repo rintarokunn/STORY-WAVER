@@ -20,6 +20,23 @@ def init_db():
                 content TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP)''')
+    
+    # キャラクターの棚 （新規追加）
+    c.execute('''
+    CREATE TABLE IF NOT EXISTS characters (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        personality TEXT,
+        appearance TEXT,
+        voice TEXT,
+        speaking_style TEXT,
+        background TEXT,
+        relation TEXT,
+        memo TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+''')
+    
     # 料金の棚
     c.execute('''CREATE TABLE IF NOT EXISTS api_usage (
                 date TEXT PRIMARY KEY,
