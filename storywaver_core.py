@@ -3,6 +3,37 @@
 import sqlite3
 from datetime import datetime
 
+from character_module.character_manager import CharacterManager
+from character_module.character_model import CharacterModel
+
+class StoryWaverCore:
+    def __init__(self):
+        self.character_manager = CharacterManager()
+
+    def create_character(
+        self,
+        name,
+        personality="",
+        appearance="",
+        voice="",
+        speaking_style="",
+        background="",
+        relation="",
+        memo=""
+    ):
+        model = CharacterModel(
+            name=name,
+            personality=personality,
+            appearance=appearance,
+            voice=voice,
+            speaking_style=speaking_style,
+            background=background,
+            relation=relation,
+            memo=memo
+        )
+
+        self.character_manager.create(model)
+        return model
 # 料金設定
 PRICE_PER_TOKEN_INPUT = 0.150 / 1_000_000
 PRICE_PER_TOKEN_OUTPUT = 0.600 / 1_000_000

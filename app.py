@@ -3,6 +3,7 @@ from datetime import datetime
 # 自作ファイルから道具を呼び出す！
 from storywaver_core import get_db_cost, get_db_connection
 from api_client import ask_ai
+from storywaver_core import StoryWaverCore
 
 # ページ設定は一番最初に1回だけ！
 st.set_page_config(page_title="StoryWaver", page_icon="📖", layout="wide")
@@ -73,3 +74,35 @@ if prompt := st.chat_input("物語のアイデアを教えてください..."):
             conn.commit()
             conn.close()
             st.success("物語を保存しました！")
+
+core = StoryWaverCore()
+
+st.header("🎭 キャラクター作成")
+
+# 入力フォーム
+with st.form("create_character_form"):
+    name = st.text_input("キャラ名")
+    personality = st.text_area("性格")
+    appearance = st.text_area("外見")
+    voice = st.text_input("声の特徴")
+    speaking_style = st.text_input("話し方")
+    background = st.text_area("背景設定")
+    relation = st.text_input("主人公との関係性")
+    memo = st.text_area("メモ")
+
+    submitted = st.form_submit_button("キャラを作成する")
+
+# ボタンが押されたら Core に渡す
+if submitted:
+    result = core.create_character(
+        name=name,
+        personality=personality,
+        appearance=appearance,
+        voice=voice,
+        speaking_style=speaking_style,
+        background=background,
+        relation=relation,
+        memo=memo
+    )
+
+    st.success(f"キャラ「{name}」を作成しました")
