@@ -2,25 +2,27 @@
 from character_model import CharacterModel
 from storywaver_core import get_db_connection
 
+class CharacterModel:
+    def __init__(
+        self,
+        id=None,
+        name="",
+        personality="",
+        appearance="",
+        voice="",
+        speaking_style="",
+        background="",
+        relation="",
+        memo=""
+    ):
+        self.id = id
+        self.name = name
+        self.personality = personality
+        self.appearance = appearance
+        self.voice = voice
+        self.speaking_style = speaking_style
+        self.background = background
+        self.relation = relation
+        self.memo = memo
 
-def create(self, model: CharacterModel):
-    conn = get_db_connection()
-    c = conn.cursor()
 
-    c.execute('''
-        INSERT INTO characters 
-        (name, personality, appearance, voice, speaking_style, background, relation, memo)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (
-        model.name,
-        model.personality,
-        model.appearance,
-        model.voice,
-        model.speaking_style,
-        model.background,
-        model.relation,
-        model.memo
-    ))
-
-    conn.commit()
-    conn.close()
