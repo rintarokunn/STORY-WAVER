@@ -3,12 +3,12 @@
 import sqlite3
 from datetime import datetime
 
-from character_model import CharacterModel
+from character_manager import CharacterManager
 
 
 class StoryWaverCore:
     def __init__(self):
-        self.character_model = CharacterModel()
+        self.character_manager = CharacterManager()
 
     def create_character(
         self,
@@ -21,7 +21,7 @@ class StoryWaverCore:
         relation="",
         memo=""
     ):
-        model = CharacterModel(
+        model = CharacterManager(
             name=name,
             personality=personality,
             appearance=appearance,

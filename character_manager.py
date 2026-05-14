@@ -1,5 +1,5 @@
 #-------------------------------キャラクター設定管理------------------------------------------------
-class CharacterModel:
+class CharacterManager:
     def __init__(
         self,
         id=None,
