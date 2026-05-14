@@ -104,5 +104,5 @@ if submitted:
         relation=relation,
         memo=memo
     )
-
-    st.success(f"キャラ「{name}」を作成しました")
+    if result=="成功":
+        st.success(f"キャラ「{name}」を作成しました")
