@@ -1,7 +1,4 @@
 #-------------------------------キャラクター設定管理------------------------------------------------
-from character_model import CharacterModel
-from storywaver_core import get_db_connection
-
 class CharacterModel:
     def __init__(
         self,
