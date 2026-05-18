@@ -25,7 +25,9 @@ class StoryWaverCore:
         except Exception as e:
             return f"エラー: {str(e)}"
         
-#  料金設定
+#  料金設定　OpenAIのAI（GPTモデル）を1回動かすたびに、何ドルの電気代（利用料金）
+#　がかかっているかを1文字レベルで超精密に計算するための、料金の単価設定
+# 0.150ドル/1Mトークン（入力、日本円換算で約22.5円）と0.600ドル/1Mトークン（出力、日本円換算で約90円）
 PRICE_PER_TOKEN_INPUT = 0.150 / 1_000_000
 PRICE_PER_TOKEN_OUTPUT = 0.600 / 1_000_000
 
