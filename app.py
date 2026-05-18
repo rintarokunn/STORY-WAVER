@@ -11,10 +11,10 @@ st.set_page_config(page_title="StoryWaver", page_icon="📖", layout="wide")
 
 # サイドバー：認証とコスト表示
 with st.sidebar:
-    st.subheader("🔑 管理者のみ無制限の合言葉")
+    st.subheader("🔑 無制限に使用できるようになる合言葉")
     input_key = st.text_input("合言葉を入力してください", type="password")
     
-    st.header("💰 OpenAI APIキーの使用限度額")
+    st.header("💰 OpenAI APIの使用限度額")
     current_cost = get_db_cost()
     limit = 0.5
     st.metric("本日の利用額", f"${current_cost:.4f}", delta=f"上限まで残り ${limit - current_cost:.4f}")
