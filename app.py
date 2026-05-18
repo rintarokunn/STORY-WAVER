@@ -20,14 +20,6 @@ with st.sidebar:
     st.metric("本日の利用額", f"${current_cost:.4f}", delta=f"上限まで残り ${limit - current_cost:.4f}")
     st.progress(min(current_cost / limit, 1.0))
 
-# ユーザー判定
-is_admin = (input_key == st.secrets["ADMIN_PASSWORD"])
-user_id = "my_name" if is_admin else "guest"
-
-st.title("StoryWaver - AIと一緒に物語を創る")
-st.caption("AIと対話しながら物語を創作するためのツールです。")
-st.divider()
-
 #------#このアプリの説明－－－－－－－
 
 # 畳み込み（Expander）を使って、画面をすっきりさせつつ技術アピール！
@@ -52,6 +44,15 @@ with st.expander("📊 本アプリケーションの機能説明はここを見
     * **分離**: キャラクター作成フォーム（`st.form`）から送信されたデータは、一度ディクショナリ（辞書型）に内包。その後、別ファイルで定義した `StoryWaverCore` クラスのインスタンスへカプセル化された状態で引き渡され、ビジネスロジックを処理する設計（疎結合）にしています。
     * **状況、未完成。今後作っていこうと考えている**: 
                 """)
+
+
+# ユーザー判定
+is_admin = (input_key == st.secrets["ADMIN_PASSWORD"])
+user_id = "my_name" if is_admin else "guest"
+
+st.title("StoryWaver - AIと一緒に物語を創る")
+st.caption("AIと対話しながら物語を創作するためのツールです。")
+st.divider()
 
 
 # チャット履歴の初期化
