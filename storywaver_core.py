@@ -12,25 +12,25 @@ class StoryWaverCore:
 
 # storywaver_core.py 内
 
-def create_character(self, char_data):
-    """
-    app.py から char_data という辞書を受け取って処理する
-    """
-    try:
-        # すでに app.py で辞書にまとめているから、
-        # そのままマネージャーの create メソッドに投げちゃえばOK！
-        self.character_manager.create(char_data)
+    def create_character(self, char_data):
+        """
+        app.py から char_data という辞書を受け取って処理する
+        """
+        try:
+            # すでに app.py で辞書にまとめているから、
+            # そのままマネージャーの create メソッドに投げちゃえばOK！
+            self.character_manager.create(char_data)
+            
+            return "成功"
+        except Exception as e:
+            return f"エラー: {str(e)}"
         
-        return "成功"
-    except Exception as e:
-        return f"エラー: {str(e)}"
-#
 #  料金設定
 PRICE_PER_TOKEN_INPUT = 0.150 / 1_000_000
 PRICE_PER_TOKEN_OUTPUT = 0.600 / 1_000_000
 
 def get_db_connection():
-    return sqlite3.connect('storywaver.db', check_same_thread=False)
+            return sqlite3.connect('storywaver.db', check_same_thread=False)
 
 def init_db():
     conn = get_db_connection()
