@@ -32,7 +32,7 @@ st.divider()
 
 # 畳み込み（Expander）を使って、画面をすっきりさせつつ技術アピール！
 with st.expander("📊 本アプリケーションの機能説明はここを見てください！"):
-    st.markdown("""
+    st.sidebar("""
     ### 🏗️ 主要な処理の解説
     本アプリは、単なるUIの表示にとどまらず、実務運用を想定したバックエンド処理をPythonおよびStreamlitで実装しています。
 
