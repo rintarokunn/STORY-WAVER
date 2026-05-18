@@ -8,6 +8,26 @@ from storywaver_core import StoryWaverCore
 # ページ設定は一番最初に1回だけ！
 st.set_page_config(page_title="StoryWaver", page_icon="📖", layout="wide")
 
+
+# サイドバー：認証とコスト表示
+with st.sidebar:
+    st.subheader("🔑 管理者のみ無制限の合言葉")
+    input_key = st.text_input("合言葉を入力してください", type="password")
+    
+    st.header("💰 OpenAI APIキーの使用限度額")
+    current_cost = get_db_cost()
+    limit = 0.5
+    st.metric("本日の利用額", f"${current_cost:.4f}", delta=f"上限まで残り ${limit - current_cost:.4f}")
+    st.progress(min(current_cost / limit, 1.0))
+
+# ユーザー判定
+is_admin = (input_key == st.secrets["ADMIN_PASSWORD"])
+user_id = "my_name" if is_admin else "guest"
+
+st.title("StoryWaver - AIと一緒に物語を創る")
+st.caption("AIと対話しながら物語を創作するためのツールです。")
+st.divider()
+
 #------#このアプリの説明－－－－－－－
 
 # 畳み込み（Expander）を使って、画面をすっきりさせつつ技術アピール！
@@ -33,24 +53,6 @@ with st.expander("📊 本アプリケーションのシステム構造・コー
     * **状況、未完成。今後作っていこうと考えている**: 
                 """)
 
-# サイドバー：認証とコスト表示
-with st.sidebar:
-    st.subheader("🔑 管理者のみ無制限の合言葉")
-    input_key = st.text_input("合言葉を入力してください", type="password")
-    
-    st.header("💰 OpenAI APIキーの使用限度額")
-    current_cost = get_db_cost()
-    limit = 0.5
-    st.metric("本日の利用額", f"${current_cost:.4f}", delta=f"上限まで残り ${limit - current_cost:.4f}")
-    st.progress(min(current_cost / limit, 1.0))
-
-# ユーザー判定
-is_admin = (input_key == st.secrets["ADMIN_PASSWORD"])
-user_id = "my_name" if is_admin else "guest"
-
-st.title("StoryWaver - AIと一緒に物語を創る")
-st.caption("AIと対話しながら物語を創作するためのツールです。")
-st.divider()
 
 # チャット履歴の初期化
 if "messages" not in st.session_state:
